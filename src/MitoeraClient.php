@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Mitoera\Sdk;
 
+use Mitoera\Sdk\Client\ApiKeysClient;
+use Mitoera\Sdk\Client\CategoriesClient;
+use Mitoera\Sdk\Client\ChartsClient;
 use Mitoera\Sdk\Client\EventsClient;
 use Mitoera\Sdk\Client\HoldsClient;
 use Mitoera\Sdk\Client\SessionsClient;
+use Mitoera\Sdk\Client\WorkspacesClient;
 use Mitoera\Sdk\Exception\AuthException;
 use Mitoera\Sdk\Http\HttpClient;
 
@@ -37,9 +41,13 @@ use Mitoera\Sdk\Http\HttpClient;
  */
 class MitoeraClient
 {
-    public readonly HoldsClient    $holds;
-    public readonly SessionsClient $sessions;
-    public readonly EventsClient   $events;
+    public readonly HoldsClient       $holds;
+    public readonly SessionsClient    $sessions;
+    public readonly EventsClient      $events;
+    public readonly ChartsClient      $charts;
+    public readonly CategoriesClient  $categories;
+    public readonly WorkspacesClient  $workspaces;
+    public readonly ApiKeysClient     $apiKeys;
 
     /** @internal Exposed for HttpClient injection in tests only. */
     public readonly string $apiPrefix;
@@ -73,9 +81,13 @@ class MitoeraClient
             (int) ($options['timeout'] ?? 30),
         );
 
-        $this->holds    = new HoldsClient($this);
-        $this->sessions = new SessionsClient($this);
-        $this->events   = new EventsClient($this);
+        $this->holds      = new HoldsClient($this);
+        $this->sessions   = new SessionsClient($this);
+        $this->events     = new EventsClient($this);
+        $this->charts     = new ChartsClient($this);
+        $this->categories = new CategoriesClient($this);
+        $this->workspaces = new WorkspacesClient($this);
+        $this->apiKeys    = new ApiKeysClient($this);
     }
 
     // ── HTTP verbs — used internally by sub-clients ──────────────────────────

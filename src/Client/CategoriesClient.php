@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Mitoera\Sdk\Client;
+
+use Mitoera\Sdk\MitoeraClient;
+use Mitoera\Sdk\Response\CategoryResponse;
+
+/** @internal Accessed via $client->categories */
+class CategoriesClient
+{
+    public function __construct(private readonly MitoeraClient $client) {}
+
+    /** @return CategoryResponse[] */
+    public function listForChart(string $chartId): array
+    {
+        $data = $this->client->get(
+            $this->client->apiPrefix . '/charts/' . $chartId . '/categories'
+        );
+        return array_map(CategoryResponse::fromArray(...), $data['items'] ?? $data);
+    }
+
+    public function get(string $chartId, int $categoryKey): CategoryResponse
+    {
+        return CategoryResponse::fromArray(
+            $this->client->get(
+                $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . $categoryKey
+            )
+        );
+    }
+
+    public function create(string $chartId, string $name, string $color): CategoryResponse
+    {
+        return CategoryResponse::fromArray(
+            $this->client->post(
+                $this->client->apiPrefix . '/charts/' . $chartId . '/categories',
+                ['name' => $name, 'color' => $color],
+            )
+        );
+    }
+
+    public function update(string $chartId, int $categoryKey, array $fields): CategoryResponse
+    {
+        return CategoryResponse::fromArray(
+            $this->client->put(
+                $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . $categoryKey,
+                $fields,
+            )
+        );
+    }
+
+    public function delete(string $chartId, int $categoryKey): void
+    {
+        $this->client->delete(
+            $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . $categoryKey
+        );
+    }
+}
