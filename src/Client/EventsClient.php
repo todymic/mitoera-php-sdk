@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Mitoera\Sdk\Client;
 
-use Mitoera\Sdk\Http\HttpClient;
+use Mitoera\Sdk\MitoeraClient;
 use Mitoera\Sdk\Response\EventResponse;
 use Mitoera\Sdk\Response\SeatStatusMap;
 
 class EventsClient
 {
-    public function __construct(
-        private readonly HttpClient $http,
-        private readonly \Closure $authHeaders,
-        private readonly string $apiPrefix,
-    ) {}
+    public function __construct(private readonly MitoeraClient $client) {}
 
     /**
      * List all events in the current workspace.
@@ -23,17 +19,17 @@ class EventsClient
      */
     public function listAll(): array
     {
-        $data = $this->http->get("{$this->apiPrefix}/events", ($this->authHeaders)());
+        $data = $this->client->get("{$this->client->apiPrefix}/events");
 
         return array_map(EventResponse::fromArray(...), $data);
     }
 
     /**
-     * Retrieve a single event by UUID or slug.
+     * Retrieve a single event by UUID.
      */
     public function get(string $eventId): EventResponse
     {
-        $data = $this->http->get("{$this->apiPrefix}/events/{$eventId}", ($this->authHeaders)());
+        $data = $this->client->get("{$this->client->apiPrefix}/events/{$eventId}");
 
         return EventResponse::fromArray($data);
     }
@@ -43,10 +39,7 @@ class EventsClient
      */
     public function findByIdentifier(string $identifier): EventResponse
     {
-        $data = $this->http->get(
-            "{$this->apiPrefix}/events/lookup/{$identifier}",
-            ($this->authHeaders)(),
-        );
+        $data = $this->client->get("{$this->client->apiPrefix}/events/lookup/{$identifier}");
 
         return EventResponse::fromArray($data);
     }
@@ -54,20 +47,17 @@ class EventsClient
     /**
      * Get seat statuses for an event.
      *
-     * @param  string[]|null $seatKeys  Filter to specific keys, null = all seats
+     * @param  string[]|null $seatKeys  Filter to specific keys; null = all seats
      */
     public function listSeats(string $eventId, ?array $seatKeys = null): SeatStatusMap
     {
-        $path = "{$this->apiPrefix}/events/{$eventId}/seats";
+        $path = "{$this->client->apiPrefix}/events/{$eventId}/seats";
 
         if (!empty($seatKeys)) {
-            $query = http_build_query(['seatKeys' => $seatKeys]);
-            $path  .= '?' . $query;
+            $path .= '?' . http_build_query(['seatKeys' => $seatKeys]);
         }
 
-        $data = $this->http->get($path, ($this->authHeaders)());
-
-        return SeatStatusMap::fromArray($data);
+        return SeatStatusMap::fromArray($this->client->get($path));
     }
 
     /**
@@ -78,10 +68,9 @@ class EventsClient
      */
     public function bulkUpdateSeats(string $eventId, array $seatKeys, string $status): int
     {
-        $data = $this->http->patch(
-            "{$this->apiPrefix}/events/{$eventId}/seats/bulk-status",
+        $data = $this->client->patch(
+            "{$this->client->apiPrefix}/events/{$eventId}/seats/bulk-status",
             ['seatKeys' => $seatKeys, 'status' => $status],
-            ($this->authHeaders)(),
         );
 
         return $data['updated'] ?? count($seatKeys);
@@ -92,15 +81,11 @@ class EventsClient
      */
     public function create(string $title, string $identifier, ?string $chartId = null): EventResponse
     {
-        $body = array_filter([
-            'title'      => $title,
-            'identifier' => $identifier,
-            'chartId'    => $chartId,
-        ]);
+        $body = array_filter(['title' => $title, 'identifier' => $identifier, 'chartId' => $chartId]);
 
-        $data = $this->http->post("{$this->apiPrefix}/events", $body, ($this->authHeaders)());
-
-        return EventResponse::fromArray($data);
+        return EventResponse::fromArray(
+            $this->client->post("{$this->client->apiPrefix}/events", $body)
+        );
     }
 
     /**
@@ -108,13 +93,9 @@ class EventsClient
      */
     public function update(string $eventId, array $fields): EventResponse
     {
-        $data = $this->http->put(
-            "{$this->apiPrefix}/events/{$eventId}",
-            $fields,
-            ($this->authHeaders)(),
+        return EventResponse::fromArray(
+            $this->client->put("{$this->client->apiPrefix}/events/{$eventId}", $fields)
         );
-
-        return EventResponse::fromArray($data);
     }
 
     /**
@@ -122,11 +103,7 @@ class EventsClient
      */
     public function linkChart(string $eventId, string $chartId): void
     {
-        $this->http->post(
-            "{$this->apiPrefix}/events/{$eventId}/link-chart/{$chartId}",
-            [],
-            ($this->authHeaders)(),
-        );
+        $this->client->post("{$this->client->apiPrefix}/events/{$eventId}/link-chart/{$chartId}");
     }
 
     /**
@@ -134,6 +111,6 @@ class EventsClient
      */
     public function delete(string $eventId): void
     {
-        $this->http->delete("{$this->apiPrefix}/events/{$eventId}", ($this->authHeaders)());
+        $this->client->delete("{$this->client->apiPrefix}/events/{$eventId}");
     }
 }
