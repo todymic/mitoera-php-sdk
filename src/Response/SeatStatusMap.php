@@ -17,7 +17,20 @@ class SeatStatusMap implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public static function fromArray(array $data): self
     {
-        return new self($data['seats'] ?? $data);
+        $seats = $data['seats'] ?? $data;
+
+        // Normalize list format [{seatKey, status}, ...] to map {seatKey: status}
+        if (isset($seats[0]) && is_array($seats[0])) {
+            $normalized = [];
+            foreach ($seats as $seat) {
+                if (isset($seat['seatKey'])) {
+                    $normalized[(string) $seat['seatKey']] = (string) ($seat['status'] ?? 'unknown');
+                }
+            }
+            $seats = $normalized;
+        }
+
+        return new self($seats);
     }
 
     public function status(string $seatKey): ?string

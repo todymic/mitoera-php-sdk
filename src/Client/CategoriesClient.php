@@ -30,30 +30,35 @@ class CategoriesClient
         );
     }
 
-    public function create(string $chartId, string $name, string $color): CategoryResponse
+    public function create(string $chartId, string $name, string $color, ?string $key = null, int|float $price = 0): CategoryResponse
     {
+        $body = array_filter(
+            ['name' => $name, 'color' => $color, 'key' => $key, 'price' => $price],
+            static fn ($v) => $v !== null && $v !== '',
+        );
+
         return CategoryResponse::fromArray(
             $this->client->post(
                 $this->client->apiPrefix . '/charts/' . $chartId . '/categories',
-                ['name' => $name, 'color' => $color],
+                $body,
             )
         );
     }
 
-    public function update(string $chartId, int $categoryKey, array $fields): CategoryResponse
+    public function update(string $chartId, string $categoryKey, array $fields): CategoryResponse
     {
         return CategoryResponse::fromArray(
             $this->client->put(
-                $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . $categoryKey,
+                $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . rawurlencode($categoryKey),
                 $fields,
             )
         );
     }
 
-    public function delete(string $chartId, int $categoryKey): void
+    public function delete(string $chartId, string $categoryKey): void
     {
         $this->client->delete(
-            $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . $categoryKey
+            $this->client->apiPrefix . '/charts/' . $chartId . '/categories/' . rawurlencode($categoryKey)
         );
     }
 }

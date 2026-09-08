@@ -17,9 +17,9 @@ readonly class HoldResponse
     public static function fromArray(array $data): self
     {
         return new self(
-            holdToken:       $data['holdToken'],
+            holdToken:       $data['holdToken'] ?? '',
             seatKeys:        $data['seatKeys'] ?? [],
-            expiresAt:       new \DateTimeImmutable($data['expiresAt']),
+            expiresAt:       isset($data['expiresAt']) ? new \DateTimeImmutable($data['expiresAt']) : new \DateTimeImmutable('+10 minutes'),
             durationSeconds: $data['durationSeconds'] ?? 600,
         );
     }
