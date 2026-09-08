@@ -32,10 +32,13 @@ class CategoriesClient
 
     public function create(string $chartId, string $name, string $color, ?string $key = null, int|float $price = 0): CategoryResponse
     {
-        $body = array_filter(
-            ['name' => $name, 'color' => $color, 'key' => $key, 'price' => $price],
-            static fn ($v) => $v !== null && $v !== '',
-        );
+        $body = ['name' => $name, 'color' => $color];
+        if ($key !== null && $key !== '') {
+            $body['key'] = $key;
+        }
+        if ($price !== 0) {
+            $body['price'] = $price;
+        }
 
         return CategoryResponse::fromArray(
             $this->client->post(

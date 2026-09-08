@@ -63,6 +63,6 @@ class CategoriesClientTest extends TestCase
             ->with('/api/charts/chart-1/categories/1', $this->anything())
             ->willReturn([]);
 
-        $this->categories->delete('chart-1', 1);
+        $this->categories->delete('chart-1', '1');
     }
 }

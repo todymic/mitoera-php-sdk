@@ -85,7 +85,7 @@ class HoldsClientTest extends TestCase
 
         $http->expects($this->once())
             ->method('post')
-            ->with('/sandbox-api/events/event-1/hold', $this->anything(), $this->anything())
+            ->with('/api/events/event-1/hold', $this->anything(), $this->anything())
             ->willReturn([
                 'holdToken' => 'ht-1', 'seatKeys' => ['A1'],
                 'expiresAt' => '2025-12-31T12:00:00+00:00', 'durationSeconds' => 600,

@@ -114,7 +114,7 @@ class ChartsClientTest extends TestCase
 
         $http->expects($this->once())
             ->method('get')
-            ->with('/sandbox-api/charts/chart-1', $this->anything())
+            ->with('/api/charts/chart-1', $this->anything())
             ->willReturn($this->chartPayload);
 
         $charts->get('chart-1');

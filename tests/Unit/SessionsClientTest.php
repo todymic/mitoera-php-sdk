@@ -63,7 +63,7 @@ class SessionsClientTest extends TestCase
 
         $http->expects($this->once())
             ->method('post')
-            ->with('/sandbox-api/public/sessions', $this->anything(), $this->anything())
+            ->with('/api/public/sessions', $this->anything(), $this->anything())
             ->willReturn($this->sessionPayload);
 
         $sessions->create('event-1');

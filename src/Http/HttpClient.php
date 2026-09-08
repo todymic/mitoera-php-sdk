@@ -4,35 +4,27 @@ declare(strict_types=1);
 
 namespace Mitoera\Sdk\Http;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\ServerException;
 use Mitoera\Sdk\Exception\ApiException;
 use Mitoera\Sdk\Exception\MitoeraException;
 
 /**
- * Thin Guzzle wrapper that:
- *  - always sends JSON
- *  - decodes JSON responses
- *  - converts HTTP errors to ApiException
+ * Minimal cURL-based HTTP client — zero external dependencies.
+ *
+ * The only runtime requirement is the php-curl extension (bundled with
+ * virtually every PHP distribution). Guzzle, Symfony HttpClient, and any
+ * other third-party client are intentionally excluded so that consumers of
+ * the SDK are free to use whichever HTTP stack they already have without
+ * adding a dependency conflict.
  */
 class HttpClient
 {
-    private Client $guzzle;
+    private readonly string $baseUrl;
+    private readonly int $timeout;
 
-    public function __construct(
-        private readonly string $baseUrl,
-        private readonly int $timeout = 30,
-    ) {
-        $this->guzzle = new Client([
-            'base_uri' => rtrim($this->baseUrl, '/') . '/',
-            'timeout'  => $this->timeout,
-            'headers'  => [
-                'Accept'       => 'application/json',
-                'Content-Type' => 'application/json',
-                'User-Agent'   => 'mitoera-php-sdk/1.0',
-            ],
-        ]);
+    public function __construct(string $baseUrl, int $timeout = 30)
+    {
+        $this->baseUrl = rtrim($baseUrl, '/');
+        $this->timeout = $timeout;
     }
 
     public function get(string $path, array $headers = []): array
@@ -62,26 +54,47 @@ class HttpClient
 
     private function request(string $method, string $path, array $body, array $headers): array
     {
-        $path = ltrim($path, '/');
+        $url = $this->baseUrl . '/' . ltrim($path, '/');
 
-        $options = ['headers' => $headers];
-        if (!empty($body)) {
-            $options['json'] = $body;
+        $curlHeaders = [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'User-Agent: mitoera-php-sdk/1.0',
+        ];
+
+        foreach ($headers as $name => $value) {
+            $curlHeaders[] = "{$name}: {$value}";
         }
 
-        try {
-            $response = $this->guzzle->request($method, $path, $options);
-            $raw = (string) $response->getBody();
+        $ch = curl_init();
 
-            return $raw === '' ? [] : (json_decode($raw, true) ?? []);
-        } catch (ClientException | ServerException $e) {
-            $status = $e->getResponse()->getStatusCode();
-            $raw    = (string) $e->getResponse()->getBody();
-            $body   = @json_decode($raw, true);
+        curl_setopt_array($ch, [
+            \CURLOPT_URL            => $url,
+            \CURLOPT_CUSTOMREQUEST  => $method,
+            \CURLOPT_RETURNTRANSFER => true,
+            \CURLOPT_TIMEOUT        => $this->timeout,
+            \CURLOPT_HTTPHEADER     => $curlHeaders,
+        ]);
 
-            throw ApiException::fromResponse($status, $body ?: null);
-        } catch (\Throwable $e) {
-            throw new MitoeraException('HTTP request failed: ' . $e->getMessage(), 0, $e);
+        if ($body !== []) {
+            curl_setopt($ch, \CURLOPT_POSTFIELDS, json_encode($body));
         }
+
+        $raw    = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, \CURLINFO_HTTP_CODE);
+        $error  = curl_error($ch);
+        curl_close($ch);
+
+        if ($raw === false || $error !== '') {
+            throw new MitoeraException('HTTP request failed: ' . $error);
+        }
+
+        $decoded = $raw !== '' ? @json_decode((string) $raw, true) : [];
+
+        if ($status >= 400) {
+            throw ApiException::fromResponse($status, is_array($decoded) ? $decoded : null);
+        }
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

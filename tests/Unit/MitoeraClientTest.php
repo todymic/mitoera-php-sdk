@@ -14,7 +14,7 @@ class MitoeraClientTest extends TestCase
     {
         $client = new MitoeraClient(['keyId' => 'pk_test_abc123', 'secret' => 'sk_xxx']);
 
-        $this->assertSame('/sandbox-api', $client->apiPrefix);
+        $this->assertSame('/api', $client->apiPrefix);
     }
 
     public function test_production_detected_from_pk_live_prefix(): void
@@ -33,7 +33,7 @@ class MitoeraClientTest extends TestCase
             'mode'   => 'sandbox',
         ]);
 
-        $this->assertSame('/sandbox-api', $client->apiPrefix);
+        $this->assertSame('/api', $client->apiPrefix);
     }
 
     public function test_throws_when_keyid_missing(): void
