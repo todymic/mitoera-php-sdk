@@ -13,17 +13,30 @@ readonly class EventResponse
         public ?string $chartId,
         public ?string $chartName,
         public ?\DateTimeImmutable $createdAt,
+        /** @var array<int, array<string, mixed>> raw {seatKey, status, ...} entries */
+        public array $seats = [],
+        /** @var array<int, array<string, mixed>> raw chart object tree (seatRows, freeZones, ...) */
+        public array $chartObjects = [],
+        /** @var array<int, array<string, mixed>> raw {id, name, color, ...} entries */
+        public array $categories = [],
+        public ?string $mercurePublicUrl = null,
+        public ?string $chartSlug = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            id:         $data['id'],
-            title:      $data['title'],
-            identifier: $data['identifier'],
-            chartId:    $data['chartId'] ?? null,
-            chartName:  $data['chartName'] ?? null,
-            createdAt:  isset($data['createdAt']) ? new \DateTimeImmutable($data['createdAt']) : null,
+            id:               $data['id'],
+            title:            $data['title'],
+            identifier:       $data['identifier'],
+            chartId:          $data['chartId'] ?? null,
+            chartName:        $data['chartName'] ?? null,
+            createdAt:        isset($data['createdAt']) ? new \DateTimeImmutable($data['createdAt']) : null,
+            seats:            $data['seats'] ?? [],
+            chartObjects:     $data['chartObjects'] ?? [],
+            categories:       $data['categories'] ?? [],
+            mercurePublicUrl: $data['mercurePublicUrl'] ?? null,
+            chartSlug:        $data['chartSlug'] ?? null,
         );
     }
 }
