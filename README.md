@@ -37,16 +37,7 @@ $client->holds->release($eventId, ['A1', 'A2'], $holdToken);
 | `pk_live_xxxx` | Production |
 | `pk_test_xxxx` | Sandbox (auto-détecté) |
 
-Le mode sandbox est **déduit automatiquement** du préfixe de la clé. Aucune option supplémentaire n'est nécessaire.
-
-```php
-// Forcer le mode sandbox manuellement (rare)
-$client = new MitoeraClient([
-    'keyId'  => 'pk_live_xxxx',
-    'secret' => 'sk_xxx',
-    'mode'   => 'sandbox',
-]);
-```
+Sandbox et production partagent le **même endpoint `/api/`**. L'environnement est déduit côté serveur depuis le préfixe de la clé (`pk_test_` → instance sandbox, `pk_live_` → instance production).
 
 Options disponibles du constructeur :
 
@@ -55,7 +46,6 @@ Options disponibles du constructeur :
 | `keyId` | string | — | **Requis.** Clé publique |
 | `secret` | string | — | **Requis.** Clé secrète |
 | `baseUrl` | string | `https://api.mitoera.com` | URL de l'API |
-| `mode` | `'sandbox'`\|`'production'` | auto depuis clé | Force l'environnement |
 | `timeout` | int | `30` | Timeout HTTP en secondes |
 
 ---
