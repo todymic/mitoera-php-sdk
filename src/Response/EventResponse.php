@@ -23,12 +23,18 @@ readonly class EventResponse
         public ?string $chartSlug = null,
     ) {}
 
+    /**
+     * Some endpoints — /events/lookup/{identifier} in particular — return a
+     * minimal {"id": "..."} payload rather than the full event resource, so
+     * title/identifier must tolerate being absent instead of crashing with
+     * a TypeError.
+     */
     public static function fromArray(array $data): self
     {
         return new self(
             id:               $data['id'],
-            title:            $data['title'],
-            identifier:       $data['identifier'],
+            title:            $data['title'] ?? '',
+            identifier:       $data['identifier'] ?? '',
             chartId:          $data['chartId'] ?? null,
             chartName:        $data['chartName'] ?? null,
             createdAt:        isset($data['createdAt']) ? new \DateTimeImmutable($data['createdAt']) : null,
