@@ -9,6 +9,7 @@ use Mitoera\Sdk\Client\CategoriesClient;
 use Mitoera\Sdk\Client\ChartsClient;
 use Mitoera\Sdk\Client\EventsClient;
 use Mitoera\Sdk\Client\HoldsClient;
+use Mitoera\Sdk\Client\ReportingClient;
 use Mitoera\Sdk\Client\SessionsClient;
 use Mitoera\Sdk\Client\WorkspacesClient;
 use Mitoera\Sdk\Exception\AuthException;
@@ -48,6 +49,7 @@ class MitoeraClient
     public readonly CategoriesClient  $categories;
     public readonly WorkspacesClient  $workspaces;
     public readonly ApiKeysClient     $apiKeys;
+    public readonly ReportingClient   $reporting;
 
     /** @internal Exposed for HttpClient injection in tests only. */
     public readonly string $apiPrefix;
@@ -87,6 +89,7 @@ class MitoeraClient
         $this->categories = new CategoriesClient($this);
         $this->workspaces = new WorkspacesClient($this);
         $this->apiKeys    = new ApiKeysClient($this);
+        $this->reporting  = new ReportingClient($this);
     }
 
     // ── HTTP verbs — used internally by sub-clients ──────────────────────────
