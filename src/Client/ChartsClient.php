@@ -68,6 +68,21 @@ class ChartsClient
         );
     }
 
+    /**
+     * Archive a chart (undocumented but live endpoint — confirmed against
+     * the real API: PATCH .../status {status: "archived"} returns 200 with
+     * the updated ChartResponse).
+     */
+    public function archive(string $chartId): ChartResponse
+    {
+        return ChartResponse::fromArray(
+            $this->client->patch(
+                $this->client->apiPrefix . '/charts/' . $chartId . '/status',
+                ['status' => 'archived'],
+            )
+        );
+    }
+
     public function delete(string $chartId): void
     {
         $this->client->delete($this->client->apiPrefix . '/charts/' . $chartId);
