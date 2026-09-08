@@ -74,7 +74,7 @@ class MitoeraClient
         // instance-level setting on the server, NOT a different URL prefix.
         // A pk_test_ key hits the same /api/... routes as a pk_live_ key.
         $this->apiPrefix  = '/api';
-        $this->credential = $keyId . ':' . $secret;
+        $this->credential = base64_encode($keyId . ':' . $secret);
         $this->http       = $http ?? new HttpClient(
             $options['baseUrl'] ?? 'https://api.mitoera.com',
             (int) ($options['timeout'] ?? 30),
@@ -125,6 +125,6 @@ class MitoeraClient
 
     private function authHeaders(): array
     {
-        return ['Authorization' => 'ApiKey ' . $this->credential];
+        return ['Authorization' => 'Basic ' . $this->credential];
     }
 }
