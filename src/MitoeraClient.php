@@ -80,6 +80,7 @@ class MitoeraClient
         $this->http       = $http ?? new HttpClient(
             $options['baseUrl'] ?? 'https://api.mitoera.com',
             (int) ($options['timeout'] ?? 30),
+            self::keyHint($keyId),
         );
 
         $this->holds      = new HoldsClient($this);
@@ -125,6 +126,17 @@ class MitoeraClient
     }
 
     // ────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Public prefix of the key, quoted back when the API rejects it.
+     *
+     * Only the mode-bearing prefix is kept: it is what distinguishes a sandbox
+     * key from a production one, and it carries no secret material.
+     */
+    private static function keyHint(string $keyId): ?string
+    {
+        return preg_match('/^(pk_(?:test|live)_)/', $keyId, $m) === 1 ? $m[1] : null;
+    }
 
     private function authHeaders(): array
     {

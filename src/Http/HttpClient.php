@@ -20,11 +20,18 @@ class HttpClient
 {
     private readonly string $baseUrl;
     private readonly int $timeout;
+    private readonly ?string $keyHint;
 
-    public function __construct(string $baseUrl, int $timeout = 30)
+    /**
+     * @param string|null $keyHint Key prefix ("pk_test_") quoted back in
+     *                             authentication errors. Never the full keyId,
+     *                             never the secret.
+     */
+    public function __construct(string $baseUrl, int $timeout = 30, ?string $keyHint = null)
     {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->timeout = $timeout;
+        $this->keyHint = $keyHint;
     }
 
     public function get(string $path, array $headers = []): array
@@ -92,7 +99,12 @@ class HttpClient
         $decoded = $raw !== '' ? @json_decode((string) $raw, true) : [];
 
         if ($status >= 400) {
-            throw ApiException::fromResponse($status, is_array($decoded) ? $decoded : null);
+            throw ApiException::fromResponse(
+                $status,
+                is_array($decoded) ? $decoded : null,
+                "$method $url",
+                $this->keyHint,
+            );
         }
 
         return is_array($decoded) ? $decoded : [];

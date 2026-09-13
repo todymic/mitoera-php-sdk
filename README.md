@@ -218,20 +218,50 @@ use Mitoera\Sdk\Exception\AuthException;
 
 try {
     $client->holds->hold($eventId, ['A1'], $holdToken);
-} catch (ApiException $e) {
-    // Erreur HTTP de l'API
-    echo $e->statusCode; // 409
-    echo $e->getMessage(); // "Seat already held"
-    var_dump($e->body);   // corps JSON décodé
 } catch (AuthException $e) {
-    // Clé API invalide ou manquante
+    // 401/403, ou keyId/secret manquant — à attraper AVANT ApiException
+    echo $e->statusCode;   // 401  (0 si l'erreur est une erreur de configuration)
+    echo $e->getMessage(); // message nommant les causes probables
+} catch (ApiException $e) {
+    // Toute autre erreur HTTP
+    echo $e->statusCode;   // 409
+    echo $e->getMessage(); // "Seat already held"
+    var_dump($e->body);    // corps JSON décodé
 }
 ```
 
-| Exception | Cause |
-|-----------|-------|
-| `AuthException` | `keyId` ou `secret` manquant/invalide |
-| `ApiException` | Erreur HTTP de l'API (4xx, 5xx) |
+| Exception | Cause | `statusCode` |
+|-----------|-------|--------------|
+| `AuthException` | `keyId`/`secret` manquant, ou 401/403 renvoyé par l'API | `0` si erreur de configuration, sinon `401`/`403` |
+| `ApiException` | Toute autre erreur HTTP (4xx, 5xx) | le code renvoyé |
+| `MitoeraException` | Échec de transport (cURL) | — |
+
+`AuthException` **hérite de** `ApiException`, qui hérite de `MitoeraException`. Un
+`catch (ApiException $e)` attrape donc aussi les échecs d'authentification : placez le bloc
+`AuthException` en premier si vous voulez les distinguer.
+
+`statusCode` et `body` restent la source d'information la plus fiable. Consultez-les plutôt que
+`getMessage()` quand l'API renvoie un corps structuré.
+
+### Diagnostiquer un 401
+
+L'API répond souvent à une clé expirée par un corps vide. Le SDK ne se contente alors pas d'un
+`HTTP 401` opaque : il nomme la requête, le préfixe de clé utilisé et les causes possibles.
+
+```
+Authentication rejected (HTTP 401) — the API returned no error detail.
+Request: GET https://api.mitoera.com/api/charts. Key in use: pk_test_… (sandbox).
+The API was reached and refused the credentials. Likely causes: the key was revoked
+or has expired; keyId and secret come from different key pairs; the key belongs to
+another instance than the one baseUrl points at. A wrong baseUrl produces a 404 or a
+connection error, never a 401.
+```
+
+Seul le préfixe de la clé apparaît : ni le `keyId` complet, ni le `secret` ne sont jamais écrits
+dans un message d'erreur.
+
+Un `401` signifie que l'API a bien été jointe et qu'elle a rejeté les identifiants. Une `baseUrl`
+erronée produit un `404` ou une erreur de connexion, jamais un `401`.
 
 ---
 
